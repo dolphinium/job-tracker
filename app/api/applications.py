@@ -19,11 +19,14 @@ async def create_application(
 ) -> Any:
     db = get_database()
     
+    # Log the creation attempt
+    print(f"Attempting to create application for URL: {application_in.linkedin_url}")
+    
     # Extract job details from LinkedIn
     job_details = await linkedin_crawler.get_job_details(str(application_in.linkedin_url))
     
     # Combine provided data with crawled data
-    application_data = {**application_in.dict(), **job_details}
+    application_data = {**application_in.model_dump(), **job_details}
     
     # Create application object
     application = ApplicationInDB(
@@ -38,6 +41,7 @@ async def create_application(
     )
     
     result = await db.applications.insert_one(application.dict(by_alias=True))
+    print(f"Application created with ID: {result.inserted_id}")
     
     created_app = await db.applications.find_one({"_id": result.inserted_id})
     return _map_application_to_response(created_app)

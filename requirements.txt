@@ -9,3 +9,5 @@ beautifulsoup4
 python-dotenv
 pytest
 httpx
+pydantic-settings
+pydantic[email]

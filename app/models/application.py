@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, HttpUrl
 from bson import ObjectId
-from app.models.user import PyObjectId
+from app.models.user import PyObjectId # Assuming PyObjectId is defined in user.py
+
 
 class StatusHistory(BaseModel):
     status: str
@@ -12,7 +13,7 @@ class StatusHistory(BaseModel):
 class Document(BaseModel):
     name: str
     type: str  # "Resume", "Cover Letter"
-    content: str
+    content: str # Consider if storing full content here is wise, maybe path?
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Contact(BaseModel):
@@ -33,7 +34,7 @@ class ApplicationBase(BaseModel):
     notes: Optional[str] = None
 
 class ApplicationCreate(ApplicationBase):
-    pass
+    user_id: PyObjectId # Add user_id here if needed on creation
 
 class ApplicationUpdate(BaseModel):
     title: Optional[str] = None
@@ -44,6 +45,7 @@ class ApplicationUpdate(BaseModel):
     applied_date: Optional[datetime] = None
     status: Optional[str] = None
     notes: Optional[str] = None
+    # You might want to add fields here to update status_history, documents, contacts
 
 class ApplicationInDB(ApplicationBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -54,23 +56,24 @@ class ApplicationInDB(ApplicationBase):
     contacts: List[Contact] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
+        populate_by_name = True # UPDATED from allow_population_by_field_name
+        arbitrary_types_allowed = True # Keep this
         json_encoders = {
-            ObjectId: str
+            ObjectId: str,
+            PyObjectId: str # Explicitly add PyObjectId too if needed
         }
 
 class Application(ApplicationBase):
-    id: str
-    user_id: str
+    id: str # Expose ID as string
+    user_id: str # Expose user_id as string
     linkedin_job_id: Optional[str] = None
     status_history: List[StatusHistory] = []
     documents: List[Document] = []
     contacts: List[Contact] = []
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
-        orm_mode = True
+        from_attributes = True # UPDATED from orm_mode
