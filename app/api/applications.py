@@ -26,7 +26,7 @@ async def create_application(
     job_details = await linkedin_crawler.get_job_details(str(application_in.linkedin_url))
     
     # Combine provided data with crawled data
-    application_data = {**application_in.model_dump(), **job_details}
+    application_data = {**application_in.dict(), **job_details}
     
     # Create application object
     application = ApplicationInDB(
@@ -40,7 +40,9 @@ async def create_application(
         ]
     )
     
-    result = await db.applications.insert_one(application.dict(by_alias=True))
+    # Use the new method that properly handles HttpUrl
+    result = await db.applications.insert_one(application.dict_for_mongodb())
+    
     print(f"Application created with ID: {result.inserted_id}")
     
     created_app = await db.applications.find_one({"_id": result.inserted_id})

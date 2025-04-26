@@ -34,7 +34,8 @@ class ApplicationBase(BaseModel):
     notes: Optional[str] = None
 
 class ApplicationCreate(ApplicationBase):
-    user_id: PyObjectId # Add user_id here if needed on creation
+    # user_id: PyObjectId # Add user_id here if needed on creation
+    pass
 
 class ApplicationUpdate(BaseModel):
     title: Optional[str] = None
@@ -58,12 +59,23 @@ class ApplicationInDB(ApplicationBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        populate_by_name = True # UPDATED from allow_population_by_field_name
-        arbitrary_types_allowed = True # Keep this
+        populate_by_name = True
+        arbitrary_types_allowed = True
         json_encoders = {
             ObjectId: str,
-            PyObjectId: str # Explicitly add PyObjectId too if needed
+            PyObjectId: str
         }
+    
+    # Add this method to convert to MongoDB-compatible dict
+    def dict_for_mongodb(self):
+        """Convert the model to a MongoDB-compatible dict"""
+        data = self.dict(by_alias=True)
+        
+        # Convert HttpUrl to string
+        if 'linkedin_url' in data and hasattr(data['linkedin_url'], '__str__'):
+            data['linkedin_url'] = str(data['linkedin_url'])
+        
+        return data
 
 class Application(ApplicationBase):
     id: str # Expose ID as string
