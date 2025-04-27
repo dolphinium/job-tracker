@@ -35,3 +35,5 @@ venv/
 .coverage
 htmlcov/
 .pytest_cache/
+project_structure_extractor.py
+project_structure.txt
