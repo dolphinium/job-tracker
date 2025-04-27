@@ -54,7 +54,7 @@
             <v-btn color="error" text @click="deleteDialog = false"
               >Cancel</v-btn
             >
-            <v-btn color="primary" text @click="deleteApplication"
+            <v-btn color="primary" text @click="handleDeleteConfirm"
               >Confirm</v-btn
             >
             <v-spacer></v-spacer>
@@ -118,11 +118,22 @@ export default {
       this.applicationToDelete = item.id;
       this.deleteDialog = true;
     },
-    async deleteApplication() {
+    async handleDeleteConfirm() {
       if (this.applicationToDelete) {
-        await this.deleteApplication(this.applicationToDelete);
-        this.deleteDialog = false;
-        this.applicationToDelete = null;
+        try {
+          // Call the mapped Vuex action 'deleteApplication'
+          // Pass the stored ID as the payload
+          await this.deleteApplication(this.applicationToDelete);
+
+          // Close the dialog and clear the ID only after success
+          this.deleteDialog = false;
+          this.applicationToDelete = null;
+        } catch (error) {
+          console.error("Failed to delete application:", error);
+          // Optionally: Show an error message to the user (e.g., using a snackbar)
+          this.deleteDialog = false; // Close dialog even on error
+          this.applicationToDelete = null; // Clear ID anyway
+        }
       }
     },
   },
