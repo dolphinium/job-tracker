@@ -6,56 +6,124 @@
         <v-spacer></v-spacer>
         <v-text-field
           v-model="search"
-          append-icon="mdi-magnify"
+          append-inner-icon="mdi-magnify"
           label="Search"
           single-line
           hide-details
+          density="compact"
         ></v-text-field>
         <v-spacer></v-spacer>
-        <v-btn color="primary" to="/applications/new">
-          <v-icon left>mdi-plus</v-icon>
+        <v-btn color="primary" to="/applications/new" prepend-icon="mdi-plus">
+          <!-- Use prepend-icon -->
           New Application
         </v-btn>
       </v-card-title>
 
+      <!-- Use v-data-table -->
       <v-data-table
         :headers="headers"
         :items="applications"
         :search="search"
         :loading="loading"
         class="elevation-1"
+        item-value="id"
+        :items-per-page="10"
       >
+        <!-- Column Templates using v-slot:[`item.key`] -->
         <template v-slot:[`item.status`]="{ item }">
-          <v-chip :color="getStatusColor(item.status)" text-color="white" small>
+          <v-chip
+            :color="getStatusColor(item.status)"
+            text-color="white"
+            size="small"
+          >
             {{ item.status }}
           </v-chip>
         </template>
+
+        <template v-slot:[`item.date_posted`]="{ item }">
+          {{ formatDate(item.date_posted) }}
+        </template>
+
         <template v-slot:[`item.applied_date`]="{ item }">
           {{ formatDate(item.applied_date) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
-          <v-btn icon small color="primary" :to="`/applications/${item.id}`">
-            <v-icon>mdi-eye</v-icon>
+
+        <template v-slot:[`item.linkedin_url`]="{ item }">
+          <v-btn
+            v-if="item.linkedin_url"
+            icon
+            variant="text"
+            color="blue-darken-1"
+            :href="item.linkedin_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            size="small"
+            title="Open LinkedIn Page"
+          >
+            <v-icon>mdi-linkedin</v-icon>
           </v-btn>
-          <v-btn icon small color="error" @click="confirmDelete(item)">
+        </template>
+
+        <template v-slot:[`item.actions`]="{ item }">
+          <v-btn
+            icon
+            variant="text"
+            size="small"
+            color="primary"
+            :to="`/applications/${item.id}`"
+            title="Edit Application"
+          >
+            <v-icon>mdi-pencil</v-icon>
+            <!-- Edit icon -->
+          </v-btn>
+          <v-btn
+            icon
+            variant="text"
+            size="small"
+            color="error"
+            @click="confirmDelete(item)"
+            title="Delete Application"
+          >
             <v-icon>mdi-delete</v-icon>
           </v-btn>
         </template>
+
+        <!-- Optional: Loading state -->
+        <template v-slot:loading>
+          <v-skeleton-loader type="table-row@10"></v-skeleton-loader>
+        </template>
+
+        <!-- Optional: No data state -->
+        <template v-slot:no-data>
+          No applications found.
+          <v-btn
+            color="primary"
+            class="ml-2"
+            size="small"
+            to="/applications/new"
+            >Create One</v-btn
+          >
+        </template>
       </v-data-table>
 
+      <!-- Delete Confirmation Dialog -->
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
-          <v-card-title>Delete Application</v-card-title>
+          <v-card-title class="text-h5">Delete Application?</v-card-title>
           <v-card-text>
-            Are you sure you want to delete this application?
+            Are you sure you want to delete the application for
+            <strong>{{ applicationToDelete?.title || "this job" }}</strong>
+            at
+            <strong>{{ applicationToDelete?.company || "this company" }}</strong
+            >? This action cannot be undone.
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="error" text @click="deleteDialog = false"
+            <v-btn color="grey" variant="text" @click="deleteDialog = false"
               >Cancel</v-btn
             >
-            <v-btn color="primary" text @click="handleDeleteConfirm"
-              >Confirm</v-btn
+            <v-btn color="error" variant="flat" @click="handleDeleteConfirm"
+              >Confirm Delete</v-btn
             >
             <v-spacer></v-spacer>
           </v-card-actions>
@@ -78,26 +146,51 @@ export default {
     return {
       search: "",
       deleteDialog: false,
-      applicationToDelete: null,
+      applicationToDelete: null, // Store the whole item for context in dialog
+      // Updated headers for Vuetify 3 v-data-table
       headers: [
-        { text: "Company", value: "company" },
-        { text: "Position", value: "title" },
-        { text: "Location", value: "location" },
-        { text: "Status", value: "status" },
-        { text: "Applied Date", value: "applied_date" },
-        { text: "Actions", value: "actions", sortable: false },
+        { title: "Company", key: "company", align: "start", sortable: true },
+        { title: "Position", key: "title", align: "start", sortable: true },
+        { title: "Location", key: "location", align: "start", sortable: true },
+        {
+          title: "Job Post Date",
+          key: "date_posted",
+          align: "start",
+          sortable: true,
+        },
+        {
+          title: "Applied Date",
+          key: "applied_date",
+          align: "start",
+          sortable: true,
+        },
+        { title: "Status", key: "status", align: "center", sortable: true },
+        {
+          title: "LinkedIn",
+          key: "linkedin_url",
+          align: "center",
+          sortable: false,
+        },
+        { title: "Actions", key: "actions", align: "center", sortable: false },
       ],
     };
   },
   computed: {
-    ...mapState("applications", ["applications", "loading"]),
+    // Make sure error state is mapped if you want to display errors
+    ...mapState("applications", ["applications", "loading", "error"]),
   },
   methods: {
     ...mapActions("applications", ["fetchApplications", "deleteApplication"]),
     formatDate(dateString) {
       if (!dateString) return "N/A";
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
+      try {
+        const date = new Date(dateString);
+        // Check if the date is valid
+        if (isNaN(date.getTime())) return "Invalid Date";
+        return date.toLocaleDateString(); // Adjust options as needed e.g., { year: 'numeric', month: 'short', day: 'numeric' }
+      } catch (e) {
+        return "Invalid Date";
+      }
     },
     getStatusColor(status) {
       const colors = {
@@ -105,34 +198,31 @@ export default {
         Applied: "blue",
         Screening: "orange",
         Interview: "purple",
-        "Technical Test": "red",
-        "Final Interview": "green",
+        "Technical Test": "deep-purple accent-4", // Example alternative
+        "Final Interview": "cyan", // Example alternative
         Offer: "teal",
-        Accepted: "green darken-2",
-        Rejected: "red darken-2",
-        Withdrawn: "grey darken-1",
+        Accepted: "success", // Use Vuetify semantic colors
+        Rejected: "error", // Use Vuetify semantic colors
+        Withdrawn: "blue-grey", // Example alternative
       };
-      return colors[status] || "grey";
+      return colors[status] || "grey"; // Default color
     },
     confirmDelete(item) {
-      this.applicationToDelete = item.id;
+      this.applicationToDelete = item; // Store the whole item
       this.deleteDialog = true;
     },
     async handleDeleteConfirm() {
-      if (this.applicationToDelete) {
+      if (this.applicationToDelete && this.applicationToDelete.id) {
         try {
-          // Call the mapped Vuex action 'deleteApplication'
-          // Pass the stored ID as the payload
-          await this.deleteApplication(this.applicationToDelete);
-
-          // Close the dialog and clear the ID only after success
+          await this.deleteApplication(this.applicationToDelete.id); // Pass only the ID
+          // Optionally show success message
           this.deleteDialog = false;
-          this.applicationToDelete = null;
+          this.applicationToDelete = null; // Clear stored item
         } catch (error) {
           console.error("Failed to delete application:", error);
-          // Optionally: Show an error message to the user (e.g., using a snackbar)
+          // Optionally show error message from this.error
           this.deleteDialog = false; // Close dialog even on error
-          this.applicationToDelete = null; // Clear ID anyway
+          this.applicationToDelete = null; // Clear item anyway
         }
       }
     },
@@ -142,3 +232,10 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Optional: Add custom styles if needed */
+.v-data-table {
+  margin-top: 16px;
+}
+</style>
