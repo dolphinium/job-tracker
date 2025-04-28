@@ -102,22 +102,56 @@ class LinkedInCrawler:
                     if text:
                         content.append(text)
                 elif isinstance(element, Tag):
+                    # Avoid extracting text from known 'show more/less' button containers if element removal wasn't used
+                    # (Add class names/tags here if you identify them and didn't use decompose)
+                    # if 'some-show-more-class' in element.get('class', []):
+                    #    continue
+
                     if element.name == 'ul':
                         items = ["- " + li.get_text(strip=True) for li in element.find_all('li')]
-                        content.append("\n".join(items))
-                    elif element.name in ['p', 'div', 'br']:
+                        if items: # Only add if list has items
+                           content.append("\n" + "\n".join(items)) # Add newline before list
+                    elif element.name in ['p', 'div']:
+                        # Get text, ensuring spaces between inline elements are somewhat preserved
+                        text = element.get_text(separator=' ', strip=True)
+                        if text:
+                           content.append(text + "\n") # Add newline after paragraphs/divs
+                    elif element.name == 'br':
+                         # Add a newline for <br>, but only if the last element wasn't already adding one
+                        if content and not content[-1].endswith('\n'):
+                            content.append('\n')
+                    elif element.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
                         text = element.get_text(strip=True)
                         if text:
-                            content.append(text + "\n") # Add newline after paragraphs/divs
+                           content.append("\n" + text + "\n") # Add spacing around headers
                     else:
+                         # For other inline tags like <strong>, <em>, <a> etc. get text directly
                         text = element.get_text(strip=True)
                         if text:
                             content.append(text)
 
-            return "\n".join(content).strip() # Join paragraphs with single newline
+
+            # --- Post-processing to remove unwanted trailing text ---
+            full_description = "\n".join(content).strip()
+
+            # Define common trailing texts to remove (case-insensitive check)
+            suffixes_to_remove = ["Show moreShow less", "Show less", "Show more"]
+
+            cleaned_description = full_description
+            lower_description = cleaned_description.lower() # Check against lowercase
+
+            for suffix in suffixes_to_remove:
+                if lower_description.endswith(suffix.lower()):
+                    # Remove the suffix, preserving original case as much as possible
+                    # Slice the original string based on the length of the found suffix
+                    cleaned_description = cleaned_description[:-len(suffix)].strip()
+                    lower_description = cleaned_description.lower() # Update for next check if needed
+
+            self.logger.debug(f"Original Description length: {len(full_description)}, Cleaned Description length: {len(cleaned_description)}")
+            return cleaned_description if cleaned_description else None # Return None if empty after cleaning
 
         except Exception as e:
-            self.logger.error(f"Error extracting job description with selector '{selector}': {e}")
+            self.logger.error(f"Error extracting job description with selector '{selector}': {e}", exc_info=True)
         return None
 
     async def get_job_details(self, url: str) -> Dict[str, Any]:
