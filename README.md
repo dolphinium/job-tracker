@@ -133,18 +133,3 @@ docker-compose exec api pytest
 *   **LinkedIn Crawler:** Web scraping is inherently fragile. LinkedIn frequently updates its website structure, which can break the crawler (`app/services/linkedin_crawler.py`). The selectors used might need adjustments over time. Using this feature should comply with LinkedIn's Terms of Service. Excessive scraping can lead to IP blocks.
 *   **Security:** The default `SECRET_KEY` in `docker-compose.yml` is **not secure** for production. Always generate and use a strong, unique secret key in a production environment, preferably loaded from environment variables or a secrets management system.
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
-
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/your-feature-name`).
-3.  Make your changes.
-4.  Commit your changes (`git commit -am 'Add some feature'`).
-5.  Push to the branch (`git push origin feature/your-feature-name`).
-6.  Create a new Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details (if one exists, otherwise assume standard open-source licensing or specify).
-```
