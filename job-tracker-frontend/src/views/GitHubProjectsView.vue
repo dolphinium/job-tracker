@@ -1,15 +1,23 @@
 <template>
   <main-layout>
     <v-card flat class="pa-0">
-      <v-card-title class="d-flex align-center pa-4">
-        <span class="text-h6 font-weight-regular">GitHub Projects</span>
-        <v-spacer></v-spacer>
+      <v-card-title
+        class="d-flex flex-column flex-lg-row align-stretch align-lg-center pa-4"
+      >
+        <span class="text-h6 font-weight-regular mb-3 mb-lg-0 mr-lg-4"
+          >GitHub Projects</span
+        >
+        <v-spacer class="d-none d-lg-block"></v-spacer>
 
-        <div class="d-flex align-center">
+        <div
+          class="d-flex flex-column flex-sm-row align-stretch mt-2 mt-lg-0 w-100 w-lg-auto"
+          style="gap: 12px"
+        >
           <!-- GitHub Token Input -->
           <v-tooltip
             location="bottom"
             text="Personal Access Token increases API rate limits"
+            class="flex-grow-1"
           >
             <template v-slot:activator="{ props }">
               <v-text-field
@@ -19,10 +27,9 @@
                 hide-details
                 density="compact"
                 variant="outlined"
-                class="mr-4"
-                style="max-width: 250px"
                 type="password"
                 v-bind="props"
+                style="min-width: 220px"
               ></v-text-field>
             </template>
           </v-tooltip>
@@ -35,8 +42,8 @@
             hide-details
             density="compact"
             variant="outlined"
-            class="mr-4"
-            style="max-width: 200px"
+            class="flex-grow-1"
+            style="min-width: 200px"
             @keyup.enter="handleFetchProjects"
           ></v-text-field>
 
@@ -47,6 +54,8 @@
             @click="handleFetchProjects"
             prepend-icon="mdi-refresh"
             variant="flat"
+            class="flex-sm-grow-0"
+            style="min-width: 180px"
           >
             {{ username ? "Refresh Projects" : "Fetch Projects" }}
           </v-btn>
