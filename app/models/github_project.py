@@ -36,7 +36,7 @@ class GitHubProject(BaseModel):
 
     def dict_for_mongodb(self):
         """Convert the model to a MongoDB-compatible dict"""
-        data = self.dict(by_alias=True)
+        data = self.model_dump(by_alias=True, exclude_none=True)
         
         # Convert HttpUrl to string
         if 'html_url' in data and hasattr(data['html_url'], '__str__'):
@@ -44,6 +44,16 @@ class GitHubProject(BaseModel):
         if 'api_url' in data and hasattr(data['api_url'], '__str__'):
             data['api_url'] = str(data['api_url'])
         
+        return data
+    
+    def dict_for_mongodb_update(self):
+        # Start with the full MongoDB dict representation
+        data = self.dict_for_mongodb()
+
+        # Remove fields that should not be updated (immutable)
+        data.pop('_id', None)
+        data.pop('created_at', None)
+
         return data
 
 class GitHubProjectResponse(BaseModel):
