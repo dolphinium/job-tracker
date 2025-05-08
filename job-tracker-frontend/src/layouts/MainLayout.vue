@@ -96,6 +96,11 @@ export default {
           icon: "mdi-plus-box-outline",
           to: "/applications/new",
         },
+        {
+          title: "GitHub Projects",
+          icon: "mdi-github",
+          to: "/github",
+        },
       ],
     };
   },

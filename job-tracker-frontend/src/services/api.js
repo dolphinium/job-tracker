@@ -58,4 +58,20 @@ export default {
   deleteApplication(id) {
     return apiClient.delete(`/applications/${id}`);
   },
+
+  // GitHub services
+  fetchGitHubProjects(username, token = null) {
+    const data = { username };
+    if (token) {
+      data.token = token;
+    }
+    return apiClient.post("/github/fetch", data);
+  },
+  getGitHubProjects() {
+    return apiClient.get("/github/");
+  },
+  getGitHubRateLimit(token = null) {
+    const params = token ? { token } : {};
+    return apiClient.get("/github/rate-limit", { params });
+  },
 };

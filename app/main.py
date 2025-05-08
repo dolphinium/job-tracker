@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.models.database import connect_to_mongodb, close_mongodb_connection
-from app.api import auth, applications
+from app.api import auth, applications, github
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -30,6 +30,8 @@ async def shutdown():
 # Include API routes
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["authentication"])
 app.include_router(applications.router, prefix=f"{settings.API_V1_STR}/applications", tags=["applications"])
+app.include_router(github.router, prefix=f"{settings.API_V1_STR}/github", tags=["github"])
+
 
 @app.get("/")
 async def root():

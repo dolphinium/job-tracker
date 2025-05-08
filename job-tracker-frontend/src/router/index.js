@@ -4,6 +4,7 @@ import ApplicationListView from "../views/ApplicationListView.vue";
 import ApplicationFormView from "../views/ApplicationFormView.vue";
 import LoginView from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
+import GitHubProjectsView from "../views/GitHubProjectsView.vue";
 import store from "../store";
 
 const routes = [
@@ -40,6 +41,12 @@ const routes = [
     path: "/register",
     name: "register",
     component: RegisterView,
+  },
+  {
+    path: "/github",
+    name: "github-projects",
+    component: GitHubProjectsView,
+    meta: { requiresAuth: true },
   },
 ];
 
