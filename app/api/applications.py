@@ -1,16 +1,26 @@
-from typing import List, Any
+from typing import List, Any, Dict
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from bson.objectid import ObjectId
+from pydantic import BaseModel
 
 from app.models.database import get_database
 from app.models.application import Application, ApplicationCreate, ApplicationUpdate, ApplicationInDB, StatusHistory
 from app.api.auth import get_current_user
 from app.models.user import User
 from app.services.linkedin_crawler import LinkedInCrawler
+from app.services.gemini_service import GeminiService
 
 router = APIRouter()
 linkedin_crawler = LinkedInCrawler()
+gemini_service = GeminiService()
+
+class EmailGenerationRequest(BaseModel):
+    project_ids: List[str]
+    language: str = "english"
+
+class EmailGenerationResponse(BaseModel):
+    email_text: str
 
 @router.post("/", response_model=Application)
 async def create_application(
@@ -147,6 +157,81 @@ async def delete_application(
     
     # Delete application
     await db.applications.delete_one({"_id": ObjectId(application_id)})
+
+@router.post("/{application_id}/generate_email", response_model=EmailGenerationResponse)
+async def generate_email(
+    application_id: str,
+    request: EmailGenerationRequest,
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """
+    Generate a personalized email for HR using the Gemini API,
+    leveraging stored job descriptions and user-selected relevant projects.
+    """
+    db = get_database()
+    
+    # Validate language
+    if request.language.lower() not in ["english", "turkish"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language must be 'english' or 'turkish'"
+        )
+    
+    # Get the application
+    application = await db.applications.find_one({
+        "_id": ObjectId(application_id),
+        "user_id": ObjectId(current_user.id)
+    })
+    
+    if not application:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found"
+        )
+    
+    # Check if job description exists
+    if not application.get("job_description"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Application has no job description"
+        )
+    
+    # Get the selected GitHub projects
+    project_ids = [ObjectId(pid) for pid in request.project_ids]
+    if not project_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one project must be selected"
+        )
+    
+    cursor = db.github_projects.find({
+        "_id": {"$in": project_ids},
+        "user_id": ObjectId(current_user.id)
+    })
+    
+    projects = await cursor.to_list(length=100)
+    
+    if not projects:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No matching GitHub projects found"
+        )
+    
+    # Prepare user info
+    user_info = {
+        "username": current_user.username,
+        "email": current_user.email
+    }
+    
+    # Generate the email
+    email_text = await gemini_service.generate_email(
+        job_description=application["job_description"],
+        projects=projects,
+        user_info=user_info,
+        language=request.language.lower()
+    )
+    
+    return EmailGenerationResponse(email_text=email_text)
 
 def _map_application_to_response(app_dict: dict) -> Application:
     """Map MongoDB document to Pydantic model for response."""

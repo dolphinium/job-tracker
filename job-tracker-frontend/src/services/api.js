@@ -58,6 +58,12 @@ export default {
   deleteApplication(id) {
     return apiClient.delete(`/applications/${id}`);
   },
+  generateEmail(applicationId, data) {
+    return apiClient.post(
+      `/applications/${applicationId}/generate_email`,
+      data
+    );
+  },
 
   // GitHub services
   fetchGitHubProjects(username, token = null) {

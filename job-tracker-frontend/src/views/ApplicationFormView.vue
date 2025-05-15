@@ -1,6 +1,6 @@
 <template>
   <main-layout>
-    <v-card max-width="800" class="mx-auto" flat>
+    <v-card max-width="800" class="mx-auto" flat v-if="!isEdit || loading">
       <!-- Flat card, optional max-width -->
       <v-card-title class="pa-4">
         <span class="text-h6 font-weight-regular">{{
@@ -151,19 +151,263 @@
         >
       </template>
     </v-snackbar>
+
+    <!-- Email Generator Component for Edit Mode -->
+    <div v-if="isEdit && currentApplication && !loading">
+      <v-card max-width="800" class="mx-auto mb-6" flat>
+        <v-card-title class="pa-4">
+          <span class="text-h6 font-weight-regular">Edit Application</span>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="pa-4">
+          <v-alert
+            type="info"
+            variant="tonal"
+            class="mb-4"
+            icon="mdi-information-outline"
+          >
+            To edit application details, click the "Edit Details" button below.
+          </v-alert>
+
+          <div class="d-flex flex-column flex-sm-row mb-4">
+            <v-btn
+              color="primary"
+              variant="outlined"
+              prepend-icon="mdi-pencil"
+              class="mb-2 mb-sm-0 mr-sm-2"
+              @click="showEditForm = true"
+            >
+              Edit Details
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="error"
+              variant="text"
+              prepend-icon="mdi-delete"
+              @click="confirmDelete"
+            >
+              Delete Application
+            </v-btn>
+          </div>
+
+          <v-divider class="my-4"></v-divider>
+
+          <!-- Application Summary -->
+          <div class="mb-4">
+            <h3 class="text-h6 mb-2">{{ currentApplication.title }}</h3>
+            <div class="d-flex flex-wrap align-center mb-2">
+              <span class="text-subtitle-1 font-weight-medium mr-2">{{
+                currentApplication.company
+              }}</span>
+              <span
+                v-if="currentApplication.location"
+                class="text-body-2 text-grey-darken-1"
+              >
+                <v-icon size="small" class="mr-1">mdi-map-marker</v-icon>
+                {{ currentApplication.location }}
+              </span>
+              <v-spacer></v-spacer>
+              <v-chip
+                :color="getStatusColor(currentApplication.status)"
+                size="small"
+                variant="tonal"
+                class="ml-2"
+              >
+                {{ currentApplication.status }}
+              </v-chip>
+            </div>
+
+            <div v-if="currentApplication.linkedin_url" class="mb-2">
+              <v-btn
+                variant="text"
+                color="blue-darken-1"
+                size="small"
+                :href="currentApplication.linkedin_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                prepend-icon="mdi-linkedin"
+              >
+                View on LinkedIn
+              </v-btn>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <!-- Email Generator Component -->
+      <email-generator :application-id="$route.params.id"></email-generator>
+    </div>
+
+    <!-- Edit Form Dialog -->
+    <v-dialog v-model="showEditForm" max-width="800" persistent>
+      <v-card>
+        <v-card-title class="pa-4">
+          <span class="text-h6">Edit Application Details</span>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showEditForm = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="pa-4 pa-md-6">
+          <v-form
+            ref="editFormRef"
+            v-model="valid"
+            @submit.prevent="saveApplication"
+            lazy-validation
+          >
+            <v-row>
+              <v-col cols="12" md="8">
+                <v-text-field
+                  v-model="form.title"
+                  label="Job Title"
+                  variant="outlined"
+                  density="compact"
+                  class="mb-4"
+                  prepend-inner-icon="mdi-briefcase-outline"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="4">
+                <v-select
+                  v-model="form.status"
+                  :items="statusOptions"
+                  label="Status"
+                  required
+                  variant="outlined"
+                  density="compact"
+                  class="mb-4"
+                  prepend-inner-icon="mdi-list-status"
+                ></v-select>
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="form.company"
+                  label="Company"
+                  variant="outlined"
+                  density="compact"
+                  class="mb-4"
+                  prepend-inner-icon="mdi-domain"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="form.location"
+                  label="Location"
+                  variant="outlined"
+                  density="compact"
+                  class="mb-4"
+                  prepend-inner-icon="mdi-map-marker-outline"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+
+            <v-menu
+              v-model="dateMenu"
+              :close-on-content-click="false"
+              min-width="auto"
+            >
+              <template v-slot:activator="{ props }">
+                <v-text-field
+                  :model-value="formattedDate"
+                  label="Applied Date (Optional)"
+                  readonly
+                  v-bind="props"
+                  variant="outlined"
+                  density="compact"
+                  class="mb-4"
+                  clearable
+                  @click:clear="form.applied_date = null"
+                  prepend-inner-icon="mdi-calendar-check-outline"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="form.applied_date"
+                @update:modelValue="dateMenu = false"
+                title="Applied Date"
+                show-adjacent-months
+                color="primary"
+              ></v-date-picker>
+            </v-menu>
+
+            <v-textarea
+              v-model="form.notes"
+              label="Your Notes"
+              rows="4"
+              variant="outlined"
+              density="compact"
+              class="mb-4"
+              prepend-inner-icon="mdi-note-text-outline"
+            ></v-textarea>
+          </v-form>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            color="grey-darken-1"
+            variant="text"
+            @click="showEditForm = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="loading"
+            :disabled="!valid || loading"
+            @click="saveApplication"
+            variant="flat"
+          >
+            Save Changes
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="450" persistent>
+      <v-card>
+        <v-card-title class="text-h6">Confirm Deletion</v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="pa-4">
+          Are you sure you want to delete this application for
+          <strong>{{ currentApplication?.title }}</strong> at
+          <strong>{{ currentApplication?.company }}</strong
+          >?
+          <p class="mt-2 text-grey-darken-1">This action cannot be undone.</p>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="grey-darken-1"
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn color="error" variant="flat" @click="handleDeleteApplication">
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </main-layout>
 </template>
 
 <script>
-// 1. IMPORT Vuex helpers and the Layout component
+// Import components and Vuex helpers
 import { mapState, mapActions } from "vuex";
 import MainLayout from "@/layouts/MainLayout.vue";
+import EmailGenerator from "@/components/EmailGenerator.vue";
 
 export default {
   name: "ApplicationFormView",
-  // 2. REGISTER the MainLayout component
   components: {
     MainLayout,
+    EmailGenerator,
   },
   data() {
     return {
@@ -172,6 +416,8 @@ export default {
       showSnackbar: false,
       snackbarText: "",
       snackbarColor: "success",
+      showEditForm: false,
+      showDeleteDialog: false,
       urlRules: [
         (v) => !!v || "URL is required",
         (v) =>
@@ -251,6 +497,7 @@ export default {
       "createApplication",
       "updateApplication",
       "fetchApplication",
+      "deleteApplication",
     ]),
 
     // Your custom methods
@@ -259,8 +506,48 @@ export default {
       this.snackbarColor = isError ? "error" : "success";
       this.showSnackbar = true;
     },
+    getStatusColor(status) {
+      // Using semantic colors where appropriate
+      const colors = {
+        Wishlist: "grey",
+        Applied: "blue",
+        Screening: "orange",
+        Interview: "purple",
+        "Technical Test": "deep-purple",
+        "Final Interview": "cyan-darken-1",
+        Offer: "teal",
+        Accepted: "success",
+        Rejected: "error",
+        Withdrawn: "blue-grey",
+      };
+      return colors[status] || "grey";
+    },
+
+    confirmDelete() {
+      this.showDeleteDialog = true;
+    },
+
+    async handleDeleteApplication() {
+      try {
+        await this.deleteApplication(this.$route.params.id);
+        this.showFeedback("Application deleted successfully.");
+        this.$router.push("/applications");
+      } catch (error) {
+        console.error("Error deleting application:", error);
+        const detail =
+          error?.response?.data?.detail ||
+          this.error ||
+          "Failed to delete application.";
+        this.showFeedback(detail, true);
+        this.showDeleteDialog = false;
+      }
+    },
+
     async saveApplication() {
-      const { valid } = await this.$refs.formRef.validate();
+      const formRef = this.showEditForm
+        ? this.$refs.editFormRef
+        : this.$refs.formRef;
+      const { valid } = await formRef.validate();
       if (valid) {
         this.showFeedback("Saving...", false); // Optional: indicate saving starts
         try {
