@@ -26,6 +26,17 @@
         </p>
 
         <v-alert
+          v-if="projectSuggestionError"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          closable
+          @click:close="projectSuggestionError = null"
+        >
+          {{ projectSuggestionError }}
+        </v-alert>
+
+        <v-alert
           v-if="emailGenerationError"
           type="error"
           variant="tonal"
@@ -39,8 +50,20 @@
         <v-row>
           <v-col cols="12" md="8">
             <v-card variant="outlined" class="mb-4">
-              <v-card-title class="text-subtitle-1">
-                Select Relevant Projects
+              <v-card-title class="d-flex align-center">
+                <span class="text-subtitle-1">Select Relevant Projects</span>
+                <v-spacer></v-spacer>
+                <v-btn
+                  color="secondary"
+                  variant="text"
+                  size="small"
+                  prepend-icon="mdi-lightbulb-on"
+                  :loading="projectSuggestionLoading"
+                  :disabled="projectSuggestionLoading"
+                  @click="handleGetSuggestions"
+                >
+                  Get AI Suggestions
+                </v-btn>
               </v-card-title>
               <v-divider></v-divider>
               <v-card-text class="pa-0">
@@ -59,6 +82,15 @@
                       ></v-checkbox-btn>
                     </template>
                     <template v-slot:append>
+                      <v-chip
+                        v-if="isProjectSuggested(project.id)"
+                        size="small"
+                        color="success"
+                        variant="flat"
+                        class="mr-2"
+                      >
+                        AI Suggested
+                      </v-chip>
                       <v-chip
                         v-if="project.language"
                         size="small"
@@ -171,11 +203,14 @@ export default {
       "generatedEmail",
       "emailGenerationLoading",
       "emailGenerationError",
+      "suggestedProjects",
+      "projectSuggestionLoading",
+      "projectSuggestionError",
     ]),
   },
   methods: {
     ...mapActions("github", ["getProjects"]),
-    ...mapActions("applications", ["generateEmail"]),
+    ...mapActions("applications", ["generateEmail", "suggestProjects"]),
 
     async handleGenerateEmail() {
       if (this.selectedProjects.length === 0) {
@@ -199,6 +234,44 @@ export default {
       } catch (error) {
         console.error("Failed to generate email:", error);
       }
+    },
+
+    async handleGetSuggestions() {
+      try {
+        console.log(
+          "Getting suggestions for application ID:",
+          this.applicationId
+        );
+
+        // Get AI suggestions for projects
+        const suggestedProjectIds = await this.suggestProjects(
+          this.applicationId
+        );
+
+        console.log("Received suggested project IDs:", suggestedProjectIds);
+
+        // Auto-select the suggested projects
+        if (suggestedProjectIds && suggestedProjectIds.length > 0) {
+          console.log("Adding suggested projects to selection");
+          // Add suggested projects to selection if not already selected
+          suggestedProjectIds.forEach((id) => {
+            if (!this.selectedProjects.includes(id)) {
+              this.selectedProjects.push(id);
+            }
+          });
+        } else {
+          console.log(
+            "No project suggestions received or empty array returned"
+          );
+        }
+      } catch (error) {
+        console.error("Failed to get project suggestions:", error);
+        console.error("Error details:", error.response?.data || error.message);
+      }
+    },
+
+    isProjectSuggested(projectId) {
+      return this.suggestedProjects.includes(projectId);
     },
 
     copyEmailToClipboard() {

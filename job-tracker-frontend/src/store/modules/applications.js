@@ -10,6 +10,9 @@ export default {
     generatedEmail: null,
     emailGenerationLoading: false,
     emailGenerationError: null,
+    suggestedProjects: [],
+    projectSuggestionLoading: false,
+    projectSuggestionError: null,
   },
   getters: {
     applications: (state) => state.applications,
@@ -17,6 +20,9 @@ export default {
     generatedEmail: (state) => state.generatedEmail,
     emailGenerationLoading: (state) => state.emailGenerationLoading,
     emailGenerationError: (state) => state.emailGenerationError,
+    suggestedProjects: (state) => state.suggestedProjects,
+    projectSuggestionLoading: (state) => state.projectSuggestionLoading,
+    projectSuggestionError: (state) => state.projectSuggestionError,
     applicationsByStatus: (state) => {
       const grouped = {};
       state.applications.forEach((app) => {
@@ -63,6 +69,15 @@ export default {
     },
     SET_EMAIL_GENERATION_ERROR(state, error) {
       state.emailGenerationError = error;
+    },
+    SET_SUGGESTED_PROJECTS(state, projectIds) {
+      state.suggestedProjects = projectIds;
+    },
+    SET_PROJECT_SUGGESTION_LOADING(state, loading) {
+      state.projectSuggestionLoading = loading;
+    },
+    SET_PROJECT_SUGGESTION_ERROR(state, error) {
+      state.projectSuggestionError = error;
     },
   },
   actions: {
@@ -169,6 +184,25 @@ export default {
         throw error;
       } finally {
         commit("SET_EMAIL_GENERATION_LOADING", false);
+      }
+    },
+
+    async suggestProjects({ commit }, applicationId) {
+      commit("SET_PROJECT_SUGGESTION_LOADING", true);
+      commit("SET_PROJECT_SUGGESTION_ERROR", null);
+      commit("SET_SUGGESTED_PROJECTS", []);
+
+      try {
+        const response = await api.suggestProjects(applicationId);
+        commit("SET_SUGGESTED_PROJECTS", response.data.suggested_project_ids);
+        return response.data.suggested_project_ids;
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.detail || "Failed to suggest projects";
+        commit("SET_PROJECT_SUGGESTION_ERROR", errorMessage);
+        throw error;
+      } finally {
+        commit("SET_PROJECT_SUGGESTION_LOADING", false);
       }
     },
   },

@@ -64,6 +64,9 @@ export default {
       data
     );
   },
+  suggestProjects(applicationId) {
+    return apiClient.get(`/applications/${applicationId}/suggest_projects`);
+  },
 
   // GitHub services
   fetchGitHubProjects(username, token = null) {
