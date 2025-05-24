@@ -1,0 +1,201 @@
+\documentclass[10pt, a4paper]{article}
+
+\usepackage{geometry} % For adjusting margins
+\geometry{left=0.75in, right=0.75in, top=0.75in, bottom=0.75in}
+
+\usepackage{fontenc} % T1 font encoding
+\usepackage{fontspec} % Required for XeLaTeX/LuaLaTeX
+% \setmainfont{Lato} % Example: Uncomment to use Lato font if installed
+\usepackage{fontawesome5} % For icons (requires XeLaTeX/LuaLaTeX)
+\usepackage{hyperref} % For clickable links
+\hypersetup{
+    colorlinks=false, % Keep links visually unobtrusive
+    pdfborder={0 0 0}, % No borders around links
+    hidelinks
+}
+\usepackage{graphicx} % To include the photo
+\usepackage{titlesec} % To customize section headings
+\usepackage{enumitem} % To customize lists (itemize)
+\usepackage{xcolor} % For potential color use
+\usepackage{needspace} % To prevent awkward page breaks
+
+% --- Customizations ---
+
+% Remove page numbering
+\pagestyle{empty}
+
+% Set paragraph spacing (instead of indentation) - Further Reduced
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt plus 1pt minus 1pt} % Reduced \parskip
+
+% Section heading format (Uppercase, Bold, Reduced Size, with Line)
+\titleformat{\section}
+  {\normalfont\Large\bfseries\uppercase} % Format
+  {} % Label
+  {0em} % Sep
+  {\Needspace{4\baselineskip}} % Before-code (Keep Needspace)
+  [\vspace{0.2em}\titlerule\vspace{0.4em}] % After-code (Reduced space around rule)
+\titlespacing*{\section}
+  {0pt} % Left margin
+  {1.0ex plus 0.5ex minus .2ex} % *** DRASTICALLY Reduced space BEFORE title ***
+  {0.8ex plus .2ex} % Reduced space AFTER title (before rule/vspace)
+
+% Define a command for CV entries (Education, Experience) - WIDER right column
+\newcommand{\cvitem}[4]{%
+  \par\needspace{3\baselineskip}% Prevent awkward breaks
+  \noindent%
+  % Adjust width calculation: Subtract a larger value to give more space to the right
+  \begin{minipage}[t]{\dimexpr\linewidth-12em}% Width for left part (WAS -10em)
+    \textbf{#1} \\% Title
+    \textit{#3} % Subtitle
+  \end{minipage}%
+  \hfill% Push the two minipages apart
+  % Increase the width of the right minipage
+  \begin{minipage}[t]{14em}% Width for right part (dates/location) (WAS 9em)
+    \raggedleft% Align right
+    \textit{#2} \\% Date
+    \textit{#4} % Location
+  \end{minipage}%
+  \par % Use \parskip for spacing after, removed explicit \vspace
+}
+
+% Define a command for Project entries - Adjusted widths slightly
+\newcommand{\projectitem}[3]{%
+  \par\needspace{3\baselineskip}%
+  \noindent%
+  \textbf{#1} \hfill #2 \\% Title and Date
+  \textit{#3}% Description
+  \par % Use \parskip for spacing after, removed explicit \vspace
+}
+
+% Customize itemize for experience/projects ('-' bullets, slightly tighter spacing, ADDED space AFTER list)
+\setlist[itemize,1]{
+    label={--},
+    leftmargin=1.5em,
+    topsep=1pt, % Space above list
+    itemsep=1pt, % Space between bullet items
+    parsep=0pt, % Space between paragraphs within an item
+    after=\vspace{6pt plus 2pt minus 1pt} % <<< ADDED: Space after the entire list finishes
+}
+
+% Define placeholder command for links
+\newcommand{\placeholderlink}[1]{\href{#1}{\texttt{[Link]}}}
+
+
+% --- Document Start ---
+\begin{document}
+
+% --- Header ---
+% Structure: Left block with Name, Contact, Links | Right block with Photo
+\begin{minipage}[t]{0.75\textwidth} % Wider left part for Name, Contact, Links
+    \vspace{0pt} % Align top
+    {\LARGE\bfseries Yunus Emre KORKMAZ} \\[8pt] % Name - Reduced size (\LARGE), reduced space below
+    % Contact Info - Reduced font size slightly relative to \LARGE name
+    {\large % Font size for contact/links
+        \faPhone\ +90-5310312626 \\[\smallskipamount] % Phone
+        \faEnvelope\ \href{mailto:official.yunusemrekorkmaz@gmail.com}{official.yunusemrekorkmaz@gmail.com} \\[\smallskipamount] % Email
+        \faGithub\ \href{https://github.com/dolphinium}{github.com/dolphinium} \\[\smallskipamount] % GitHub Link
+        \faLinkedin\ \href{https://www.linkedin.com/in/yunus-emre-k0rkmaz/}{linkedin.com/in/yunus-emre-k0rkmaz/} % LinkedIn Link
+    }
+\end{minipage}% <--- No space here
+\hfill % Push minipages apart
+\begin{minipage}[t]{0.2\textwidth} % Narrower right part for Photo only
+    \vspace{0pt} % Align top
+    \flushright % Align photo to the right
+    \vspace{-16pt} % <<<< Added negative vertical space HERE to move image up
+    \includegraphics[width=\linewidth]{pp.jpeg} % Photo fills this minipage width
+\end{minipage}
+
+\vspace{-1.0cm} % Reduced space after the entire header block (Keep as is for now)
+
+% --- Education ---
+\section{Education}
+
+\cvitem{Eskisehir Technical University}{2019--2024}
+       {B. Sc. in Computer Engineering, GPA: 3.37/4}{Eskişehir, Türkiye}
+
+\cvitem{Eyüp Aygar Science High School}{2014--2018}
+       {High School Diploma, GPA: 91.06/100}{Mersin, Türkiye}
+
+% --- Experience ---
+\section{Experience}
+
+\cvitem{Bewell Technology}{July 2024 -- Aug 2024} % Note: Job Ad implies future start for SnA, this is likely correct to show.
+       {Computer Engineer Intern as Artificial Intelligence Engineer}{Eskişehir, Türkiye}
+\begin{itemize}
+    \item Trained an Object Detection Model using YOLO, achieving 83\% mAP@0.5 in detecting damaged buildings and extracting geolocation from drone imagery.
+    \item Conducted performance benchmarks on YOLO models (V5-V8-V10) using Colab with GPU, optimizing for speed and accuracy trade-offs.
+    \item Monitored and compared model performance metrics using CometML to identify the most effective architecture.
+    \item Hosted an end-to-end demo website on Hugging Face Spaces, providing users with real-time access to building detection outputs.
+    \item Managed code versioning and collaborated with teammates using GitLab, ensuring smooth project workflow and delivery.
+    \item \textbf{Live Demo on Hugging Face Spaces:} \href{https://huggingface.co/spaces/dolphinium/rescuenet-damaged-building-detection}{huggingface.co/spaces/dolphinium/rescuenet-damaged-building-detection}.
+    \item \textbf{GitHub Repository:} \href{https://github.com/dolphinium/rescuenet-damaged-building-detection}{github.com/dolphinium/rescuenet-damaged-building-detection}.
+\end{itemize}
+
+\cvitem{Anadolu University Computer Research and Application Center}{September 2023 -- October 2023}
+       {Computer Engineer Intern as Software Architect}{Eskişehir, Türkiye}
+\begin{itemize}
+    \item Developed and designed an end-to-end Web based Survey Application on Web Platform for Anadolu University by using .NET Framework and Angular.
+    \item Utilized PostgreSQL for the database.
+    \item GitHub and Microsoft Azure used for version control and task scheduling.
+\end{itemize}
+
+\cvitem{Hergele Mobility}{March 2022 -- October 2023}
+       {Part-time Back-end Developer}{İstanbul, Türkiye}
+\begin{itemize}
+    \item Developed Web based Admin Dashboard for Electrical Scooters by using .NET Framework with MVC pattern.
+    \item Utilized MongoDB for the database.
+    \item Used Jira and GitHub for task scheduling and version control.
+\end{itemize}
+
+% --- Technical Skills and Interests ---
+\section{Technical Skills and Interests}
+
+\begin{itemize}[leftmargin=*, itemsep=1pt, topsep=1pt]
+    \item \textbf{Programming Languages:} Python (Proficient), SQL (Proficient), C\#, Java, Javascript
+    
+    \item \textbf{AI/ML \& Analytics Concepts:} Deep Learning, Machine Learning, Predictive Analytics, Computer Vision, Object Detection (YOLOv5/v8/v10), Generative AI (LLMs, Image Gen - FLUX), Model Fine-tuning, RAG, NLP, Multimodal AI, OCR, Speech Processing (VAD, STT), Prompt Engineering, Agentic AI, Vector Search, MLOps
+    \item \textbf{AI/ML Libraries:} PyTorch, Hugging Face (Diffusers, Transformers, Datasets, Hub, Spaces), Scikit-learn, Pandas, NumPy, OpenCV, EasyOCR, FAISS, SpeechRecognition, TorchAudio, Gradio, LangChain (Basic)
+    \item \textbf{Data Engineering \& APIs:} Apache Airflow, FastAPI, Celery, Flask, RESTful APIs, SQLAlchemy, Pydantic
+    \item \textbf{Databases \& Storage:} Relational Databases (PostgreSQL, SQLite), NoSQL Databases (MongoDB), Vector Databases (FAISS, Chroma), Data Warehousing Concepts, Data Lakes (AWS S3)
+    \item \textbf{Tools \& Platforms:} Docker, Git/GitHub, Apache Airflow, AWS (S3, EC2), Azure (Basic), GCP (Basic), CometML, Google Colab, Jupyter Notebooks, Linux/macOS CLI, Terraform
+\end{itemize}
+\vspace{1pt} % Minimal space
+\noindent\textbf{Field of Interest:} Applying AI/ML and Data Engineering to Real-World Problems, Building Production-Ready AI and Data Pipeline Systems, Predictive Analytics, Cloud Data Solutions, Computer Vision, Generative AI (Model Fine-tuning, Image/Text Generation), NLP (RAG, Document Intelligence, Speech Analysis), Multimodal AI Systems, MLOps.
+
+% --- Projects ---
+\section{Projects}
+
+\projectitem{Data Engineering ETL Pipelines with Apache Airflow}{December 2023 -- Present}
+             {Developed and orchestrated ETL data pipelines for extracting, transforming, and loading data from diverse sources (e.g., social media APIs, web scraping) into AWS S3 using Apache Airflow, focusing on building scalable and maintainable data solutions.}
+\begin{itemize}
+    \item Designed and implemented scalable data pipelines using Apache Airflow, leveraging Python and Pandas for data extraction (e.g., Reddit API, web scraping), transformation, validation, and cleaning prior to loading.
+    \item Utilized Docker and Docker Compose for containerizing the Airflow environment (webserver, scheduler, worker, PostgreSQL, Redis), ensuring consistency and facilitating deployment.
+    \item Implemented data loading processes to AWS S3, enabling downstream analytics, data warehousing integration, and data lake population.
+    \item Managed configurations (e.g., API keys, database connections), dependencies (`requirements.txt`), and version control (Git) for the entire ETL pipeline, adhering to data pipeline best practices.
+    \item \textbf{GitHub Repository:} \href{https://github.com/dolphinium/data-eng-practises}{github.com/dolphinium/data-eng-practises}
+    \item \textbf{Tools and technologies used}: Python, Apache Airflow, Docker, AWS S3, PostgreSQL, Redis, Pandas, PRAW, Requests, BeautifulSoup4, Git.
+\end{itemize}
+
+\projectitem{Automated Call Classification System}{February 2025}
+             {Developed a production-grade system for automated analysis and classification of customer service call recordings, achieving \textbf{over 95\% accuracy.}}
+\begin{itemize}
+    \item Designed and implemented a scalable, microservices-based architecture using FastAPI, Celery, MongoDB, and Redis for high-throughput audio analysis and data processing.
+    \item Integrated Google's Gemini model and Silero VAD for intelligent call classification and precise voice activity detection, driving data-driven insights.
+    \item Achieved \textbf{>95\%} classification accuracy in production with real customer data, optimizing customer service operations and resource allocation.
+    \item Developed robust error handling and retry mechanisms, processing thousands of audio files daily to ensure data quality and pipeline reliability.
+    \item \textbf{GitHub Repository}: \href{https://github.com/dolphinium/call-classification-system}{github.com/dolphinium/call-classification-system}
+    \item \textbf{Tools and technologies used}: Python, FastAPI, Celery, MongoDB, Redis, Docker, Gemini, Silero VAD, PyTorch, TorchAudio, SpeechRecognition, FFmpeg
+\end{itemize}
+
+\vspace{-16pt}
+
+% --- Languages ---
+\section{Languages}
+
+\noindent\textbf{Turkish:} Native \\
+\textbf{English:} Advanced (B2 + C1) \\
+\textbf{German:} Beginner
+
+\end{document}
+% --- End of Document ---
